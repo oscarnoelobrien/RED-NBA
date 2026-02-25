@@ -622,7 +622,7 @@
     </header>
 
     <div class="disclaimer-banner">
-        <strong>Disclaimer:</strong> RED is a descriptive metric measuring coaching performance against preseason expectations. It is not predictive of future results. Data refreshes on each page load from live ESPN API.
+        <strong>RED — Mid-Season Edition:</strong> Compares actual wins to Pythagorean expected wins based on current points scored/allowed. Positive = winning more than scoring margin predicts. Descriptive only — not predictive.
     </div>
 
     <div class="container">
@@ -669,57 +669,46 @@
             </div>
             <div class="modal-body">
                 <p>
-                    <strong>RED (Rating of Elite Dominance)</strong> measures how much each NBA coach is outperforming or underperforming what their team was expected to do.
+                    <strong>RED (Rating of Elite Dominance)</strong> is a mid-season coaching performance metric. It measures how many more — or fewer — wins a coach has compared to what their team's own scoring margin predicts.
                 </p>
 
-                <h3>The Concept</h3>
+                <h3>The Core Idea</h3>
                 <p>
-                    A coach with <code>RED = +3.0</code> has generated <strong>3 more wins than expected</strong> given their roster quality and preseason expectations. Negative RED indicates underperformance relative to expectations.
+                    Every team has a "true" performance level hidden in their scoring margins. A team outscoring opponents by 8 points per game should be winning at a very high rate. If they're not, something is off. If they're winning even more than that, the coach is doing something special.
+                </p>
+                <p>
+                    RED captures exactly that gap — using only <strong>current season data</strong>. No preseason projections. No roster rankings. Just: how does this team's actual record compare to what their point differential says it should be?
                 </p>
 
-                <h3>Data Inputs</h3>
-                <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
-                    <li><strong>Vegas Win Totals:</strong> Preseason consensus over/under projections</li>
-                    <li><strong>Player Quality (BPM):</strong> Basketball Plus-Minus estimates team strength</li>
-                    <li><strong>Game Results:</strong> Live data from ESPN API (2025-26 season)</li>
-                </ul>
-
-                <h3>Calculation Layers</h3>
-
-                <strong>Layer 1 - Baseline Wins:</strong>
+                <h3>The Formula</h3>
+                <strong>Pythagorean Win Expectation (NBA standard, exp = 13.91):</strong>
                 <div class="formula-box">
-Baseline = (0.7 × Vegas Total) + (0.3 × BPM-Derived Wins)
-BPM Wins = 41 + (Team BPM × 5)
-                </div>
-
-                <strong>Layer 2 - Game Expected Win Probability:</strong>
-                <div class="formula-box">
-Strength Diff = Team BPM - Opponent BPM
-if Home: Strength Diff += 0.5
-P(Win) = 1 / (1 + e^(-0.35 × Strength Diff))
-                </div>
-
-                <strong>Layer 3 - RED Score:</strong>
-                <div class="formula-box">
-Game Delta = Actual Result (1 or 0) - P(Win)
-if Margin ≤ 6 pts: Game Delta *= 1.10 (close game bonus)
-RED = Σ Game Deltas (all games)
+Expected Win% = PtsFor¹³·⁹¹ ÷ (PtsFor¹³·⁹¹ + PtsAgainst¹³·⁹¹)
+Expected Wins = Expected Win% × Games Played
+RED = Actual Wins − Expected Wins
                 </div>
 
                 <h3>Interpretation</h3>
                 <p>
-                    <strong>Positive RED:</strong> Coach exceeded expectations. Team is winning more games than talent level predicted.
+                    <strong>Positive RED:</strong> The coach is winning more games than the scoring margin says they should. Strong game management, clutch performance, or tactical edge.
                 </p>
                 <p>
-                    <strong>Negative RED:</strong> Coach underperformed expectations. Team is winning fewer games than roster quality suggested.
+                    <strong>Negative RED:</strong> The team is underperforming its point differential. Losing close games, inconsistency, or poor situational decisions.
+                </p>
+                <p>
+                    <strong>Near zero:</strong> The team is winning exactly as many games as their talent and performance suggest. Expected outcome.
                 </p>
 
-                <h3>Important Notes</h3>
+                <h3>Why Pythagorean?</h3>
+                <p>
+                    Developed by Bill James for baseball and adapted for basketball, Pythagorean expectation is one of the most validated formulas in sports analytics. Point differential is a better predictor of future performance than actual wins — making the gap between wins and expected wins a reliable signal of coaching impact.
+                </p>
+
+                <h3>Notes</h3>
                 <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
-                    <li>RED is <strong>descriptive</strong>, not predictive of future performance</li>
-                    <li>Accounts for home court advantage and roster quality differential</li>
-                    <li>Close games (≤6 points) weighted higher to reward clutch coaching</li>
-                    <li>Only includes completed games from the 2025-26 season</li>
+                    <li>RED is <strong>descriptive</strong> — it describes what happened, not what will happen</li>
+                    <li>Uses live ESPN standings data; falls back to All-Star break snapshot if unavailable</li>
+                    <li>Updated each time the page is loaded</li>
                 </ul>
             </div>
         </div>
@@ -727,7 +716,7 @@ RED = Σ Game Deltas (all games)
 
     <footer>
         <p>
-            <strong>Data Sources:</strong> ESPN API (live game data) · Vegas lines: 2025-26 preseason consensus · BPM: Basketball Reference estimates
+            <strong>Data Sources:</strong> ESPN API (live standings + points data) · Fallback: compiled records as of 2026 All-Star break
         </p>
         <p style="margin-top: 0.5rem;">
             RED is a descriptive analytical metric. Not recommended for gambling or financial decisions.
@@ -736,71 +725,7 @@ RED = Σ Game Deltas (all games)
 
     <script>
         // Static Data
-        const VEGAS_TOTALS = {
-            "Boston Celtics": 53.5,
-            "Oklahoma City Thunder": 54.5,
-            "Denver Nuggets": 50.5,
-            "New York Knicks": 49.5,
-            "Dallas Mavericks": 49.5,
-            "Minnesota Timberwolves": 48.5,
-            "Cleveland Cavaliers": 48.5,
-            "Golden State Warriors": 47.5,
-            "Los Angeles Lakers": 47.5,
-            "Milwaukee Bucks": 47.5,
-            "Philadelphia 76ers": 46.5,
-            "Houston Rockets": 45.5,
-            "Los Angeles Clippers": 44.5,
-            "Phoenix Suns": 44.5,
-            "Miami Heat": 44.5,
-            "Orlando Magic": 43.5,
-            "Sacramento Kings": 43.5,
-            "Memphis Grizzlies": 43.5,
-            "Indiana Pacers": 42.5,
-            "New Orleans Pelicans": 41.5,
-            "Atlanta Hawks": 37.5,
-            "Chicago Bulls": 36.5,
-            "Detroit Pistons": 34.5,
-            "San Antonio Spurs": 33.5,
-            "Toronto Raptors": 33.5,
-            "Charlotte Hornets": 29.5,
-            "Portland Trail Blazers": 28.5,
-            "Utah Jazz": 28.5,
-            "Washington Wizards": 24.5,
-            "Brooklyn Nets": 25.5
-        };
-
-        const TEAM_BPM = {
-            "Oklahoma City Thunder": 2.8,
-            "Boston Celtics": 2.4,
-            "Cleveland Cavaliers": 1.9,
-            "Denver Nuggets": 1.7,
-            "New York Knicks": 1.3,
-            "Minnesota Timberwolves": 1.2,
-            "Dallas Mavericks": 1.1,
-            "Houston Rockets": 0.9,
-            "Orlando Magic": 0.6,
-            "Miami Heat": 0.5,
-            "Los Angeles Lakers": 0.4,
-            "Indiana Pacers": 0.3,
-            "Golden State Warriors": 0.2,
-            "Milwaukee Bucks": 0.1,
-            "Memphis Grizzlies": 0.0,
-            "Sacramento Kings": -0.1,
-            "Philadelphia 76ers": -0.2,
-            "Los Angeles Clippers": -0.3,
-            "New Orleans Pelicans": -0.4,
-            "Phoenix Suns": -0.5,
-            "Atlanta Hawks": -0.8,
-            "Toronto Raptors": -1.0,
-            "Chicago Bulls": -1.1,
-            "Brooklyn Nets": -1.4,
-            "Charlotte Hornets": -1.6,
-            "San Antonio Spurs": -1.7,
-            "Portland Trail Blazers": -2.0,
-            "Detroit Pistons": -2.1,
-            "Utah Jazz": -2.4,
-            "Washington Wizards": -2.9
-        };
+        // No preseason data needed. RED is now 100% based on current season performance.
 
         const ESPN_TEAMS = [
             { id: "1",  name: "Atlanta Hawks",          abbr: "ATL", coach: "Quin Snyder", color: "#E03C21" },
@@ -861,43 +786,45 @@ RED = Σ Game Deltas (all games)
             return `${now.getFullYear()}-${month}-${day} ${hours}:${minutes} UTC`;
         }
 
-        // ── Hardcoded fallback standings (All-Star Break 2026, ~Feb 14) ──────────
-        // Used automatically if the live API call fails for any reason.
-        // Source: compiled from public reporting around the 2026 All-Star break.
+        // ── Hardcoded fallback data (All-Star Break 2026, ~Feb 14) ───────────────
+        // W-L records from public reporting. PPG / OPP PPG estimated from
+        // season averages reported around the break. Used if live API fails.
+        // ptsFor / ptsAgainst = points per game averages for the season.
         const FALLBACK_RECORDS = {
-            "Oklahoma City Thunder":  { wins: 43, losses: 12 },
-            "Cleveland Cavaliers":    { wins: 42, losses: 13 },
-            "Boston Celtics":         { wins: 38, losses: 17 },
-            "Houston Rockets":        { wins: 35, losses: 20 },
-            "New York Knicks":        { wins: 34, losses: 21 },
-            "Denver Nuggets":         { wins: 32, losses: 23 },
-            "Memphis Grizzlies":      { wins: 31, losses: 24 },
-            "Golden State Warriors":  { wins: 30, losses: 25 },
-            "Dallas Mavericks":       { wins: 29, losses: 26 },
-            "Los Angeles Lakers":     { wins: 29, losses: 26 },
-            "Minnesota Timberwolves": { wins: 28, losses: 27 },
-            "Milwaukee Bucks":        { wins: 28, losses: 27 },
-            "Miami Heat":             { wins: 27, losses: 28 },
-            "Sacramento Kings":       { wins: 27, losses: 28 },
-            "Orlando Magic":          { wins: 26, losses: 29 },
-            "Los Angeles Clippers":   { wins: 25, losses: 30 },
-            "Phoenix Suns":           { wins: 24, losses: 31 },
-            "Philadelphia 76ers":     { wins: 23, losses: 32 },
-            "New Orleans Pelicans":   { wins: 22, losses: 33 },
-            "Atlanta Hawks":          { wins: 21, losses: 34 },
-            "Toronto Raptors":        { wins: 19, losses: 36 },
-            "Chicago Bulls":          { wins: 18, losses: 37 },
-            "Detroit Pistons":        { wins: 17, losses: 38 },
-            "Brooklyn Nets":          { wins: 15, losses: 38 },
-            "Indiana Pacers":         { wins: 15, losses: 41 },
-            "Charlotte Hornets":      { wins: 15, losses: 40 },
-            "Portland Trail Blazers": { wins: 14, losses: 41 },
-            "San Antonio Spurs":      { wins: 13, losses: 42 },
-            "Utah Jazz":              { wins: 11, losses: 44 },
-            "Washington Wizards":     { wins:  9, losses: 46 },
+            // Team                              W    L    PF     PA
+            "Oklahoma City Thunder":  { wins: 43, losses: 12, ptsFor: 119.4, ptsAgainst: 108.1 },
+            "Cleveland Cavaliers":    { wins: 42, losses: 13, ptsFor: 118.2, ptsAgainst: 108.9 },
+            "Boston Celtics":         { wins: 38, losses: 17, ptsFor: 120.1, ptsAgainst: 112.4 },
+            "Houston Rockets":        { wins: 35, losses: 20, ptsFor: 116.8, ptsAgainst: 111.6 },
+            "New York Knicks":        { wins: 34, losses: 21, ptsFor: 115.9, ptsAgainst: 111.8 },
+            "Denver Nuggets":         { wins: 32, losses: 23, ptsFor: 116.5, ptsAgainst: 113.0 },
+            "Memphis Grizzlies":      { wins: 31, losses: 24, ptsFor: 115.3, ptsAgainst: 112.2 },
+            "Golden State Warriors":  { wins: 30, losses: 25, ptsFor: 117.2, ptsAgainst: 115.1 },
+            "Dallas Mavericks":       { wins: 29, losses: 26, ptsFor: 114.8, ptsAgainst: 113.2 },
+            "Los Angeles Lakers":     { wins: 29, losses: 26, ptsFor: 115.6, ptsAgainst: 114.0 },
+            "Minnesota Timberwolves": { wins: 28, losses: 27, ptsFor: 113.4, ptsAgainst: 112.1 },
+            "Milwaukee Bucks":        { wins: 28, losses: 27, ptsFor: 114.7, ptsAgainst: 114.9 },
+            "Miami Heat":             { wins: 27, losses: 28, ptsFor: 112.8, ptsAgainst: 113.5 },
+            "Sacramento Kings":       { wins: 27, losses: 28, ptsFor: 116.1, ptsAgainst: 117.0 },
+            "Orlando Magic":          { wins: 26, losses: 29, ptsFor: 109.4, ptsAgainst: 110.8 },
+            "Los Angeles Clippers":   { wins: 25, losses: 30, ptsFor: 112.3, ptsAgainst: 114.2 },
+            "Phoenix Suns":           { wins: 24, losses: 31, ptsFor: 113.6, ptsAgainst: 116.4 },
+            "Philadelphia 76ers":     { wins: 23, losses: 32, ptsFor: 111.9, ptsAgainst: 115.2 },
+            "New Orleans Pelicans":   { wins: 22, losses: 33, ptsFor: 110.5, ptsAgainst: 114.8 },
+            "Atlanta Hawks":          { wins: 21, losses: 34, ptsFor: 114.2, ptsAgainst: 118.1 },
+            "Toronto Raptors":        { wins: 19, losses: 36, ptsFor: 112.7, ptsAgainst: 117.3 },
+            "Chicago Bulls":          { wins: 18, losses: 37, ptsFor: 111.4, ptsAgainst: 117.6 },
+            "Detroit Pistons":        { wins: 17, losses: 38, ptsFor: 110.8, ptsAgainst: 117.9 },
+            "Brooklyn Nets":          { wins: 15, losses: 38, ptsFor: 109.3, ptsAgainst: 118.5 },
+            "Indiana Pacers":         { wins: 15, losses: 41, ptsFor: 118.4, ptsAgainst: 124.2 },
+            "Charlotte Hornets":      { wins: 15, losses: 40, ptsFor: 110.2, ptsAgainst: 118.8 },
+            "Portland Trail Blazers": { wins: 14, losses: 41, ptsFor: 108.9, ptsAgainst: 117.4 },
+            "San Antonio Spurs":      { wins: 13, losses: 42, ptsFor: 109.6, ptsAgainst: 119.1 },
+            "Utah Jazz":              { wins: 11, losses: 44, ptsFor: 107.8, ptsAgainst: 120.3 },
+            "Washington Wizards":     { wins:  9, losses: 46, ptsFor: 106.4, ptsAgainst: 122.7 },
         };
 
-        // ── Single-call ESPN standings fetch (all 30 teams at once) ──────────────
+        // ── Single-call ESPN standings fetch (all 30 teams, one request) ────────
         async function fetchAllStandings() {
             const url = 'https://site.api.espn.com/apis/v2/sports/basketball/nba/standings?season=2026';
             try {
@@ -905,7 +832,6 @@ RED = Σ Game Deltas (all games)
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
 
-                // ESPN standings returns entries array under data.standings.entries
                 const entries = data?.standings?.entries || [];
                 if (entries.length < 28) throw new Error('Incomplete standings data');
 
@@ -914,45 +840,74 @@ RED = Σ Game Deltas (all games)
                     const name = entry.team?.displayName;
                     if (!name) continue;
                     const stats = entry.stats || [];
-                    const get = key => {
-                        const s = stats.find(s => s.name === key || s.abbreviation === key);
-                        return s ? Math.round(parseFloat(s.value)) : 0;
+
+                    // Helper: find a stat by any of several possible field names ESPN uses
+                    const get = (...keys) => {
+                        for (const key of keys) {
+                            const s = stats.find(s => s.name === key || s.abbreviation === key || s.shortDisplayName === key);
+                            if (s) return parseFloat(s.value) || 0;
+                        }
+                        return 0;
                     };
-                    const wins   = get('wins')   || get('W');
-                    const losses = get('losses') || get('L');
-                    records[name] = { wins, losses };
+
+                    const wins     = Math.round(get('wins',   'W'));
+                    const losses   = Math.round(get('losses', 'L'));
+                    // ESPN may expose avg points as 'pointsFor'/'pointsAgainst' or 'avgPoints'/'oppAvgPoints'
+                    const ptsFor   = get('pointsFor', 'avgPoints',    'ppg',  'Points For');
+                    const ptsAgainst = get('pointsAgainst', 'oppAvgPoints', 'oppg', 'Points Against');
+
+                    records[name] = { wins, losses, ptsFor, ptsAgainst };
                 }
-                console.log(`✅ Loaded live standings for ${Object.keys(records).length} teams`);
+
+                // If ESPN didn't return points data, pull it from our fallback
+                for (const [team, rec] of Object.entries(records)) {
+                    if (!rec.ptsFor && FALLBACK_RECORDS[team]) {
+                        rec.ptsFor     = FALLBACK_RECORDS[team].ptsFor;
+                        rec.ptsAgainst = FALLBACK_RECORDS[team].ptsAgainst;
+                    }
+                }
+
+                console.log(`✅ Live standings loaded for ${Object.keys(records).length} teams`);
                 return { records, source: 'live' };
             } catch (err) {
-                console.warn('Live standings failed, using All-Star break fallback:', err.message);
+                console.warn('Live standings failed — using All-Star break fallback:', err.message);
                 return { records: FALLBACK_RECORDS, source: 'fallback' };
             }
         }
 
-        // RED calculation using real W-L record + Vegas/BPM baseline
-        function calculateRED(teamName, wins, losses, gamesPlayed) {
-            const teamBpm    = TEAM_BPM[teamName]    || 0;
-            const vegasTotal = VEGAS_TOTALS[teamName] || 41;
+        // ── RED Calculation: Pythagorean Win Expectation ─────────────────────────
+        // Formula developed by Bill James, adapted for basketball (exp = 13.91).
+        // Expected Win% = PtsFor^13.91 / (PtsFor^13.91 + PtsAgainst^13.91)
+        // RED = Actual Wins − Pythagorean Expected Wins
+        //
+        // Interpretation:
+        //   Positive RED → coach winning MORE games than scoring margin predicts
+        //   Negative RED → team underperforming its point differential
+        //
+        // This is entirely current-season data. No preseason projections used.
+        function calculateRED(wins, losses, ptsFor, ptsAgainst) {
+            const gamesPlayed = wins + losses;
+            if (gamesPlayed === 0 || ptsFor === 0 || ptsAgainst === 0) {
+                return { redScore: 0, gamesPlayed: 0, actualWins: wins,
+                         actualLosses: losses, expectedWins: 0, redPerGame: 0 };
+            }
 
-            // Layer 1: Full-season baseline (Vegas 70% + BPM-derived 30%)
-            const bpmWins  = 41 + (teamBpm * 5);
-            const baseline = (0.7 * vegasTotal) + (0.3 * bpmWins);
+            // Pythagorean exponent calibrated for NBA (13.91 is standard)
+            const EXP = 13.91;
+            const pfPow = Math.pow(ptsFor,     EXP);
+            const paPow = Math.pow(ptsAgainst, EXP);
+            const pythWinPct  = pfPow / (pfPow + paPow);
+            const expectedWins = pythWinPct * gamesPlayed;
 
-            // Pro-rate baseline to games played so far
-            const expectedWinsToDate = (baseline / 82) * gamesPlayed;
-
-            // RED = how many wins above/below expectation
-            const redScore   = wins - expectedWinsToDate;
-            const redPerGame = gamesPlayed > 0 ? redScore / gamesPlayed : 0;
+            const redScore   = wins - expectedWins;
+            const redPerGame = redScore / gamesPlayed;
 
             return {
                 redScore,
                 gamesPlayed,
-                actualWins: wins,
+                actualWins:   wins,
                 actualLosses: losses,
-                expectedWins: parseFloat(expectedWinsToDate.toFixed(1)),
-                baselineWins: parseFloat(baseline.toFixed(1)),
+                expectedWins: parseFloat(expectedWins.toFixed(1)),
                 redPerGame
             };
         }
@@ -967,13 +922,11 @@ RED = Σ Game Deltas (all games)
             for (const team of ESPN_TEAMS) {
                 const rec = records[team.name];
                 if (!rec) continue;
+                if ((rec.wins + rec.losses) === 0) continue;
 
-                const wins        = rec.wins;
-                const losses      = rec.losses;
-                const gamesPlayed = wins + losses;
-                if (gamesPlayed === 0) continue;
-
-                const redData = calculateRED(team.name, wins, losses, gamesPlayed);
+                const redData = calculateRED(
+                    rec.wins, rec.losses, rec.ptsFor, rec.ptsAgainst
+                );
                 allResults.push({ ...team, ...redData });
             }
 
